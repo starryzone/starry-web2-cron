@@ -1,0 +1,24 @@
+{
+  "name": "starry-web2-cron",
+  "version": "0.0.1",
+  "description": "NodeJS script to run to update various things with Discord and the database",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "starrybot",
+    "cosmos"
+  ],
+  "author": "Mike Purvis",
+  "license": "MIT",
+  "dependencies": {
+    "@logtail/node": "^0.1.10",
+    "dotenv": "^16.0.0",
+    "knex": "^2.0.0",
+    "node-fetch": "^3.2.4",
+    "pg": "^8.7.3",
+    "sqlite3": "^5.0.6"
+  }
+}
