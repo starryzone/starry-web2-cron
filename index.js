@@ -183,6 +183,7 @@ const cronMe = async (guildId, members = null) => {
       } else {
         await logtail.info(`Finished updating the final guild: ${guildId} with ${guildMemberCount} members.`)
         await AddSyncLog(guildId, guildMemberCount)
+        process.exit()
       }
     } else {
       const member = members.pop()
