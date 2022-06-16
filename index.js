@@ -56,15 +56,19 @@ const db = knex({
 // Makes POST request to backend to sync a Discord member from a guild
 const updateGuildUser = async (guildId, discordUserId) => {
   // Log intention
-  await logtail.info('calling token rule info', {
-    event: 'track-user-flow',
-    time_relative: 'before',
-    predicate: 'calling /token-rule-info',
-    data: {
-      guildId,
-      discordUserId
-    }
-  })
+  try {
+    await logtail.info('calling token rule info', {
+      event: 'track-user-flow',
+      time_relative: 'before',
+      predicate: 'calling /token-rule-info',
+      data: {
+        guildId,
+        discordUserId
+      }
+    })
+  } catch (e) {
+    console.warn('Logtail is messing up again.', e)
+  }
 
   // Make request to update this member from this guild
   const requestOptions = {
@@ -77,41 +81,53 @@ const updateGuildUser = async (guildId, discordUserId) => {
   switch (res.status) {
     case 200:
       // Expected behavior
-      await logtail.info('calling token rule info', {
-        event: 'track-user-flow',
-        time_relative: 'after',
-        predicate: 'calling /token-rule-info',
-        data: {
-          guildId,
-          discordUserId,
+      try {
+        await logtail.info('calling token rule info', {
+          event: 'track-user-flow',
+          time_relative: 'after',
+          predicate: 'calling /token-rule-info',
+          data: {
+            guildId,
+            discordUserId,
+            res: {
+              status: res.status,
+              statusText: res.statusText,
+              json: await res.json()
+            }
+          }
+        })
+      } catch (e) {
+        console.warn('Logtail is messing up again.', e)
+      }
+      break
+    case 400:
+      try {
+        await logtail.error('400 status', {
+          event: 'received 400 status',
           res: {
             status: res.status,
             statusText: res.statusText,
-            json: await res.json()
+            discordUserId,
+            guildId
           }
-        }
-      })
-      break
-    case 400:
-      await logtail.error('400 status', {
-        event: 'received 400 status',
-        res: {
-          status: res.status,
-          statusText: res.statusText,
-          discordUserId,
-          guildId
-        }
-      })
+        })
+      } catch (e) {
+        console.warn('Logtail is messing up again.', e)
+      }
       break;
     default:
       // Alert of oddness
-      await logtail.error('unexpected status', {
-        event: 'received unexpected status',
-        res: {
-          status: res.status,
-          statusText: res.statusText,
-        }
-      })
+      try {
+        await logtail.error('unexpected status', {
+          event: 'received unexpected status',
+          res: {
+            status: res.status,
+            statusText: res.statusText,
+          }
+        })
+      } catch (e) {
+        console.warn('Logtail is messing up again.', e)
+      }
   }
 }
 
@@ -177,11 +193,19 @@ const cronMe = async (guildId, members = null) => {
       // Recurse if there are more guilds to update
       const guildMemberCount = membersPerGuild[guildId]
       if (guildsToUpdate.length) {
-        await logtail.info(`Finished updating guild ${guildId} with ${guildMemberCount} members.`)
+        try {
+          await logtail.info(`Finished updating guild ${guildId} with ${guildMemberCount} members.`)
+        } catch (e) {
+          console.warn('Logtail is messing up again.', e)
+        }
         await AddSyncLog(guildId, guildMemberCount)
         cronMe(guildsToUpdate.pop())
       } else {
-        await logtail.info(`Finished updating the final guild: ${guildId} with ${guildMemberCount} members.`)
+        try {
+          await logtail.info(`Finished updating the final guild: ${guildId} with ${guildMemberCount} members.`)
+        } catch (e) {
+          console.warn('Logtail is messing up again.', e)
+        }
         await AddSyncLog(guildId, guildMemberCount)
         process.exit()
       }
@@ -190,15 +214,23 @@ const cronMe = async (guildId, members = null) => {
       try {
         // Call endpoint that will update user's roles
         const discordAccountId = member['discord_account_id']
-        await logtail.info(`doing something with member ${discordAccountId} for guild ${guildId}`)
+        try {
+          await logtail.info(`doing something with member ${discordAccountId} for guild ${guildId}`)
+        } catch (e) {
+          console.warn('Logtail is messing up again.', e)
+        }
         await updateGuildUser(guildId, discordAccountId)
       } catch (e) {
-        await logtail.error('Failure updating guild user', {
-          event: 'calling updateGuildUser',
-          res: {
-            error: JSON.stringify(e),
-          }
-        })
+        try {
+          await logtail.error('Failure updating guild user', {
+            event: 'calling updateGuildUser',
+            res: {
+              error: JSON.stringify(e),
+            }
+          })
+        } catch (e) {
+          console.warn('Logtail is messing up again.', e)
+        }
       }
       cronMe(guildId, members)
     }
